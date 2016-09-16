@@ -49,31 +49,31 @@ describe "PostgreSQL Triggers" do
 
       DB[:entries] << {:id=>2, :account_id=>1}
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [2, 0]
-      
+
       DB[:entries] << {:id=>3, :account_id=>nil}
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [2, 0]
-      
+
       DB[:entries].where(:id=>3).update(:account_id=>2)
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [2, 1]
-      
+
       DB[:entries].where(:id=>2).update(:account_id=>2)
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [1, 2]
-      
+
       DB[:entries].where(:id=>2).update(:account_id=>nil)
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [1, 1]
-      
+
       DB[:entries].where(:id=>2).update(:id=>4)
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [1, 1]
-      
+
       DB[:entries].where(:id=>4).update(:account_id=>2)
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [1, 2]
-      
+
       DB[:entries].where(:id=>4).update(:account_id=>nil)
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [1, 1]
-      
+
       DB[:entries].filter(:id=>4).delete
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [1, 1]
-      
+
       DB[:entries].delete
       DB[:accounts].order(:id).select_map(:num_entries).must_equal [0, 0]
     end
@@ -128,11 +128,13 @@ describe "PostgreSQL Triggers" do
     end
 
     it "Should handle NULL values correctly" do
-      proc{DB[:accounts].update(:balance=>nil)}.must_raise(Sequel::DatabaseError)
+      DB[:accounts].update(:balance=>nil)
       DB[:accounts].delete
       DB[:accounts] << {:id=>1, :balance=>nil}
       DB[:accounts].update(:balance=>nil)
-      proc{DB[:accounts].update(:balance=>0)}.must_raise(Sequel::DatabaseError)
+      DB[:accounts].update(:balance=>0)
+      proc{DB[:accounts].update(:balance=>1)}.must_raise(Sequel::DatabaseError)
+      DB[:accounts].update(:balance=>nil)
     end
   end
 
@@ -157,34 +159,34 @@ describe "PostgreSQL Triggers" do
 
       DB[:entries] << {:id=>2, :account_id=>1, :amount=>200}
       DB[:accounts].order(:id).select_map(:balance).must_equal [300, 0]
-      
+
       DB[:entries] << {:id=>3, :account_id=>nil, :amount=>500}
       DB[:accounts].order(:id).select_map(:balance).must_equal [300, 0]
-      
+
       DB[:entries].where(:id=>3).update(:account_id=>2)
       DB[:accounts].order(:id).select_map(:balance).must_equal [300, 500]
-      
+
       DB[:entries].exclude(:id=>2).update(:amount=>Sequel.*(:amount, 2))
       DB[:accounts].order(:id).select_map(:balance).must_equal [400, 1000]
-      
+
       DB[:entries].where(:id=>2).update(:account_id=>2)
       DB[:accounts].order(:id).select_map(:balance).must_equal [200, 1200]
-      
+
       DB[:entries].where(:id=>2).update(:account_id=>nil)
       DB[:accounts].order(:id).select_map(:balance).must_equal [200, 1000]
-      
+
       DB[:entries].where(:id=>2).update(:id=>4)
       DB[:accounts].order(:id).select_map(:balance).must_equal [200, 1000]
-      
+
       DB[:entries].where(:id=>4).update(:account_id=>2)
       DB[:accounts].order(:id).select_map(:balance).must_equal [200, 1200]
-      
+
       DB[:entries].where(:id=>4).update(:account_id=>nil)
       DB[:accounts].order(:id).select_map(:balance).must_equal [200, 1000]
-      
+
       DB[:entries].filter(:id=>4).delete
       DB[:accounts].order(:id).select_map(:balance).must_equal [200, 1000]
-      
+
       DB[:entries].delete
       DB[:accounts].order(:id).select_map(:balance).must_equal [0, 0]
     end

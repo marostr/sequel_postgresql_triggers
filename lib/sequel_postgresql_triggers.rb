@@ -78,7 +78,7 @@ module Sequel
 
       # Makes all given columns in the given table immutable, so an exception
       # is raised if there is an attempt to modify the value when updating the
-      # record. Arguments:
+      # record. Allows updating from/to NULL. Arguments:
       # * table : name of table
       # * columns : All columns in the table that should be immutable.  Can end with a hash of options, see module documentation.
       def pgt_immutable(table, *columns)
@@ -89,7 +89,7 @@ module Sequel
           old = "OLD.#{quote_identifier(c)}"
           new = "NEW.#{quote_identifier(c)}"
           <<-END
-            IF #{new} IS DISTINCT FROM #{old} THEN
+            IF #{new} IS DISTINCT FROM #{old} AND #{old} IS NOT NULL AND #{new} IS NOT NULL THEN
                 RAISE EXCEPTION 'Attempted #{c} update: Old: %, New: %', #{old}, #{new};
             END IF;
           END
@@ -142,7 +142,7 @@ module Sequel
       # summed table for the matching id. The join table must have NOT NULL constraints
       # on the foreign keys to the main table and summed table and a
       # composite unique constraint on both foreign keys.
-      # 
+      #
       # Arguments:
       # * opts : option hash, see module documentation, and below.
       # * :main_table: name of table holding sum cache column
